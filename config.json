@@ -1,0 +1,23 @@
+{
+  "app": {
+    "title": "Cyber Threat Research",
+    "subtitle": "Inteligência de Ameaças V3.9",
+    "page_icon": "🛡️",
+    "layout": "wide",
+    "language": "pt-BR"
+  },
+  "network": {
+    "timeout": 30,
+    "max_retries": 3,
+    "verify_ssl": true
+  },
+  "features": {
+    "enable_reports": true,
+    "enable_email_breach_check": true,
+    "enable_external_apis": true
+  },
+  "export": {
+    "default_format": "csv",
+    "output_directory": "exports"
+  }
+}
