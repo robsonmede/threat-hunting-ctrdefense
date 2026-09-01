@@ -1,0 +1,17 @@
+# Ambientes Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Segredos e credenciais
+.streamlit/secrets.toml
+credentials.json
+
+# Arquivos locais de configuração, caso contenham dados privados
+.env
+config.local.json
+
+# Saídas da aplicação
+exports/
+logs/
