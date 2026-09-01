@@ -2,6 +2,7 @@ git clone https://github.com/SEU_USUARIO/threat-intel-streamlit.git
 cd threat-hunting-ctrdefense
 
 python3 -m venv .venv
+
 source .venv/bin/activate
 
 pip install -r requirements.txt
