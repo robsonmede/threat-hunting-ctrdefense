@@ -1,4 +1,4 @@
-# threat-hunting-ctrdefense
+
 # 🛡️ Cyber Threat Research
 
 Plataforma modular de **Threat Intelligence** desenvolvida em Python e Streamlit para extração, classificação e análise de Indicadores de Comprometimento — IOCs.
