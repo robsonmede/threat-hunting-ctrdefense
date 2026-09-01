@@ -1,199 +1,415 @@
+# services/virustotal.py
+"""
+Integração com a API v3 do VirusTotal.
+
+Suporta consultas de:
+
+- Endereços IPv4 e IPv6
+- Domínios
+- URLs
+- Hashes MD5, SHA-1 e SHA-256
+
+A chave da API deve ser fornecida pelo chamador. Nunca deixe chaves
+reais diretamente neste arquivo ou no código-fonte versionado.
+"""
+
+from __future__ import annotations
+
 import base64
-import urllib.parse
-from datetime import datetime, timezone
-import streamlit as st
-from services.http import get_http_session
+import ipaddress
+import re
+from typing import Any, Literal
 
-HTTP = get_http_session()
+import requests
 
-_VT_IP_DEFAULTS = {
-    "malicious": 0, "suspicious": 0, "harmless": 0, "undetected": 0, "total_engines": 0,
-    "country": "N/D", "as_owner": "N/D", "asn": "N/D", "network": "N/D", "rir": "N/D",
-    "votes_malicious": 0, "votes_harmless": 0, "last_analysis_human": "N/D",
-    "malicious_engines": [],
-}
 
-def get_vt_data(api_key, endpoint, item_id):
-    """Consulta a API do VirusTotal."""
-    if not api_key:
-        return {"error": "Chave API não configurada"}
-    
+VirusTotalIOCType = Literal[
+    "auto",
+    "ip",
+    "domain",
+    "dominio",
+    "url",
+    "hash",
+    "file",
+    "arquivo",
+]
+
+VIRUSTOTAL_API_URL = "https://www.virustotal.com/api/v3"
+DEFAULT_TIMEOUT = 30
+
+
+def query_virustotal(
+    api_key: str,
+    ioc: str,
+    ioc_type: VirusTotalIOCType = "auto",
+    timeout: int = DEFAULT_TIMEOUT,
+) -> dict[str, Any]:
+    """
+    Consulta um indicador de comprometimento no VirusTotal.
+
+    Parâmetros:
+        api_key:
+            Chave da API do VirusTotal.
+
+        ioc:
+            IP, domínio, URL ou hash a ser consultado.
+
+        ioc_type:
+            Tipo do indicador. Aceita:
+            auto, ip, domain, url, hash, file.
+
+        timeout:
+            Tempo máximo da requisição, em segundos.
+
+    Retorno em caso de sucesso:
+
+        {
+            "success": True,
+            "status_code": 200,
+            "ioc": "...",
+            "ioc_type": "ip",
+            "endpoint": "...",
+            "data": {...},
+            "attributes": {...},
+            "stats": {...},
+            "reputation": 10
+        }
+
+    Retorno em caso de erro:
+
+        {
+            "success": False,
+            "status_code": 401,
+            "error": "Mensagem de erro"
+        }
+    """
+
+    if not isinstance(api_key, str) or not api_key.strip():
+        return _error_result(
+            "Chave da API do VirusTotal não configurada."
+        )
+
+    if not isinstance(ioc, str) or not ioc.strip():
+        return _error_result(
+            "O indicador de comprometimento não foi informado."
+        )
+
+    ioc = ioc.strip()
+    normalized_type = _normalize_ioc_type(ioc_type)
+
+    try:
+        resolved_type = detect_ioc_type(ioc, normalized_type)
+        endpoint = build_endpoint(ioc, resolved_type)
+
+    except ValueError as exc:
+        return _error_result(str(exc))
+
     headers = {
-        "accept": "application/json",
-        "x-apikey": api_key,
-        "x-tool": "threat-intel-streamlit-v3.9"
+        "x-apikey": api_key.strip(),
+        "Accept": "application/json",
+        "User-Agent": "Cyber-Threat-Research/3.9",
     }
-    
-    url = f"https://www.virustotal.com/api/v3/{endpoint}/{item_id}"
-    
-    try:
-        response = HTTP.get(url, headers=headers, timeout=12)
-        
-        if response.status_code == 200:
-            return response.json()
-        elif response.status_code == 404:
-            return {"error": "Não encontrado no VirusTotal"}
-        elif response.status_code == 429:
-            return {"error": "Limite de requisições excedido (Rate Limit)"}
-        elif response.status_code == 401:
-            return {"error": "API Key inválida ou expirada"}
-        else:
-            return {"error": f"Erro HTTP {response.status_code}: {response.text[:100]}"}
-            
-    except requests.exceptions.Timeout:
-        return {"error": "Timeout na consulta ao VirusTotal"}
-    except requests.exceptions.ConnectionError:
-        return {"error": "Erro de conexão com VirusTotal"}
-    except Exception as e:
-        return {"error": f"Erro inesperado: {str(e)}"}
 
-def parse_vt_details(vt_response):
-    """Processa a resposta do VirusTotal para extrair informações estruturadas."""
-    if "error" in vt_response:
-        base = {
-            "verdict": f"⚠️ {vt_response['error']}", 
-            "score": "N/A", 
-            "tags": "N/A", 
-            "file_name": "N/D", 
-            "file_type": "N/D", 
-            "file_size": "N/D"
-        }
-        base.update(_VT_IP_DEFAULTS)
-        return base
-    
     try:
-        attrs = vt_response["data"]["attributes"]
-        stats = attrs.get("last_analysis_stats", {})
-        
-        malicious = stats.get("malicious", 0)
-        suspicious = stats.get("suspicious", 0)
-        harmless = stats.get("harmless", 0)
-        undetected = stats.get("undetected", 0)
-        total = sum(stats.values())
-        
-        # Tags e nomes
-        tags = attrs.get("tags", [])[:3]
-        meaningful_name = attrs.get("meaningful_name", "")
-        names_list = attrs.get("names", [])
-        primary_name = meaningful_name if meaningful_name else (names_list[0] if names_list else "Desconhecido")
-        file_type = attrs.get("type_description", attrs.get("magic", "N/D"))
-        file_size = attrs.get("size", "N/D")
-        
-        # Determinar veredito
-        if malicious > 0:
-            verdict = f"🚨 Malicioso ({malicious}/{total})"
-            score_color = "status-danger"
-        elif suspicious > 0:
-            verdict = f"🟡 Suspeito ({suspicious}/{total})"
-            score_color = "status-warn"
-        else:
-            verdict = f"✅ Limpo ({harmless}/{total})"
-            score_color = "status-safe"
-        
-        # Engines maliciosos
-        malicious_engines = []
-        analysis_results = attrs.get("last_analysis_results", {}) or {}
-        for engine, res in analysis_results.items():
-            if isinstance(res, dict) and res.get("category") in ("malicious", "suspicious"):
-                malicious_engines.append({
-                    "engine": engine,
-                    "result": res.get("result", "N/D"),
-                    "category": res.get("category", "N/D")
-                })
-        
-        # Votos da comunidade
-        votes = attrs.get("total_votes", {}) or {}
-        
-        # Timestamp da última análise
-        last_analysis_ts = attrs.get("last_analysis_date")
-        last_analysis_human = "N/D"
-        if isinstance(last_analysis_ts, (int, float)):
-            try:
-                last_analysis_human = datetime.fromtimestamp(last_analysis_ts, tz=timezone.utc).strftime("%d/%m/%Y %H:%M UTC")
-            except (OSError, OverflowError, ValueError):
-                last_analysis_human = "N/D"
-        
-        # Informações de rede (para IPs)
-        country = attrs.get("country", "N/D")
-        as_owner = attrs.get("as_owner", "N/D")
-        asn = attrs.get("asn", "N/D")
-        network = attrs.get("network", "N/D")
-        rir = attrs.get("regional_internet_registry", "N/D")
-        
-        return {
-            "verdict": verdict,
-            "score_color": score_color,
-            "score": attrs.get("reputation", 0),
-            "tags": ", ".join(tags) if tags else "Sem Tags",
-            "file_name": primary_name,
-            "file_type": file_type,
-            "file_size": f"{file_size:,} bytes" if isinstance(file_size, int) else str(file_size),
-            "malicious": malicious,
-            "suspicious": suspicious,
-            "harmless": harmless,
-            "undetected": undetected,
-            "total_engines": total,
-            "country": country,
-            "as_owner": as_owner,
-            "asn": asn,
-            "network": network,
-            "rir": rir,
-            "votes_malicious": votes.get("malicious", 0),
-            "votes_harmless": votes.get("harmless", 0),
-            "last_analysis_human": last_analysis_human,
-            "malicious_engines": malicious_engines[:10],  # Limitar a 10 engines
-            "raw_stats": stats,
-        }
-        
-    except KeyError as e:
-        return {
-            "verdict": f"⚠️ Erro na estrutura da resposta (campo {e})",
-            "score": "N/A",
-            "tags": "N/D",
-            "file_name": "N/D",
-            "file_type": "N/D",
-            "file_size": "N/D",
-            **{k: "N/D" for k in _VT_IP_DEFAULTS.keys()}
-        }
+        response = requests.get(
+            endpoint,
+            headers=headers,
+            timeout=timeout,
+        )
 
-def vt_url_id(value):
-    """Codifica URL para ID do VirusTotal (base64 URL-safe)."""
+    except requests.Timeout:
+        return _error_result(
+            "Tempo limite excedido ao consultar o VirusTotal."
+        )
+
+    except requests.ConnectionError:
+        return _error_result(
+            "Não foi possível estabelecer conexão com o VirusTotal."
+        )
+
+    except requests.RequestException as exc:
+        return _error_result(
+            f"Erro de comunicação com o VirusTotal: {exc}"
+        )
+
+    result = _parse_response_error(response)
+
+    if result is not None:
+        return result
+
     try:
-        encoded = base64.urlsafe_b64encode(value.encode("utf-8")).decode("ascii")
-        return encoded.rstrip("=")
-    except Exception:
-        return value
+        payload = response.json()
 
-def query_vt_universal(api_key, value, kind):
-    """
-    Consulta universal para VirusTotal.
-    
-    Args:
-        api_key: Chave API do VirusTotal
-        value: Valor a consultar (IP, hash, URL, domínio)
-        kind: Tipo do valor ("IP", "MD5", "SHA1", "SHA256", "URL", "DOMAIN")
-    
-    Returns:
-        dict: Resposta do VirusTotal ou erro
-    """
-    if not api_key:
-        return {"error": "VirusTotal: API Key não configurada"}
-    
-    # Mapeamento de tipos para endpoints
-    endpoint_map = {
-        "IP": "ip_addresses",
-        "MD5": "files",
-        "SHA1": "files",
-        "SHA256": "files",
-        "URL": "urls",
-        "DOMAIN": "domains",
+    except ValueError:
+        return _error_result(
+            "O VirusTotal retornou uma resposta JSON inválida.",
+            status_code=response.status_code,
+        )
+
+    resource = payload.get("data", {})
+    attributes = resource.get("attributes", {})
+
+    return {
+        "success": True,
+        "status_code": response.status_code,
+        "ioc": ioc,
+        "ioc_type": resolved_type,
+        "endpoint": endpoint,
+        "data": payload,
+        "attributes": attributes,
+        "stats": attributes.get("last_analysis_stats", {}),
+        "reputation": attributes.get("reputation"),
+        "last_analysis_date": attributes.get("last_analysis_date"),
+        "meaningful_name": attributes.get("meaningful_name"),
     }
-    
-    endpoint = endpoint_map.get(kind)
-    if not endpoint:
-        return {"error": f"VirusTotal não suporta o tipo '{kind}'"}
-    
-    # Para URLs, precisa codificar
-    item_id = vt_url_id(value) if kind == "URL" else value
-    
-    return get_vt_data(api_key, endpoint, item_id)
+
+
+def build_endpoint(ioc: str, ioc_type: str) -> str:
+    """
+    Constrói o endpoint da API v3 do VirusTotal para o IOC informado.
+    """
+
+    ioc = ioc.strip()
+    ioc_type = _normalize_ioc_type(ioc_type)
+
+    if ioc_type == "ip":
+        return f"{VIRUSTOTAL_API_URL}/ip_addresses/{ioc}"
+
+    if ioc_type == "domain":
+        return f"{VIRUSTOTAL_API_URL}/domains/{ioc}"
+
+    if ioc_type == "hash":
+        return f"{VIRUSTOTAL_API_URL}/files/{ioc}"
+
+    if ioc_type == "url":
+        return f"{VIRUSTOTAL_API_URL}/urls/{encode_url_id(ioc)}"
+
+    raise ValueError(
+        "Tipo de IOC inválido. Use: auto, ip, domain, url ou hash."
+    )
+
+
+def detect_ioc_type(ioc: str, requested_type: str = "auto") -> str:
+    """
+    Identifica automaticamente o tipo do IOC.
+
+    Retorna um dos valores:
+    ip, domain, url ou hash.
+    """
+
+    requested_type = _normalize_ioc_type(requested_type)
+
+    if requested_type != "auto":
+        if requested_type == "ip" and not is_valid_ip(ioc):
+            raise ValueError("O valor informado não é um IP válido.")
+
+        if requested_type == "hash" and not is_valid_hash(ioc):
+            raise ValueError("O valor informado não é um hash válido.")
+
+        if requested_type == "domain" and not is_valid_domain(ioc):
+            raise ValueError("O valor informado não é um domínio válido.")
+
+        if requested_type == "url" and not is_valid_url(ioc):
+            raise ValueError("O valor informado não é uma URL válida.")
+
+        return requested_type
+
+    if is_valid_ip(ioc):
+        return "ip"
+
+    if is_valid_hash(ioc):
+        return "hash"
+
+    if is_valid_url(ioc):
+        return "url"
+
+    if is_valid_domain(ioc):
+        return "domain"
+
+    raise ValueError(
+        "Não foi possível identificar o tipo do IOC informado."
+    )
+
+
+def encode_url_id(url: str) -> str:
+    """
+    Codifica uma URL conforme exigido pelo endpoint /urls da API v3.
+
+    O VirusTotal utiliza Base64 URL-safe sem os caracteres '=' finais.
+    """
+
+    encoded = base64.urlsafe_b64encode(
+        url.strip().encode("utf-8")
+    ).decode("utf-8")
+
+    return encoded.rstrip("=")
+
+
+def is_valid_ip(value: str) -> bool:
+    """Retorna True caso o valor seja um IPv4 ou IPv6 válido."""
+
+    try:
+        ipaddress.ip_address(value.strip())
+        return True
+
+    except ValueError:
+        return False
+
+
+def is_valid_hash(value: str) -> bool:
+    """Valida hashes MD5, SHA-1 e SHA-256."""
+
+    value = value.strip()
+
+    return bool(
+        re.fullmatch(
+            r"(?:[a-fA-F0-9]{32}|[a-fA-F0-9]{40}|[a-fA-F0-9]{64})",
+            value,
+        )
+    )
+
+
+def is_valid_url(value: str) -> bool:
+    """
+    Validação básica de URL HTTP/HTTPS.
+
+    A URL deve conter esquema e hostname.
+    """
+
+    value = value.strip()
+
+    pattern = re.compile(
+        r"^https?://"
+        r"(?:[a-zA-Z0-9-]+\.)+"
+        r"[a-zA-Z]{2,}"
+        r"(?::\d{1,5})?"
+        r"(?:[/?#][^\s]*)?$",
+        re.IGNORECASE,
+    )
+
+    return bool(pattern.match(value))
+
+
+def is_valid_domain(value: str) -> bool:
+    """Valida um domínio sem esquema HTTP ou caminho."""
+
+    value = value.strip().lower().rstrip(".")
+
+    if len(value) > 253 or "://" in value or "/" in value:
+        return False
+
+    pattern = re.compile(
+        r"^(?=.{1,253}$)"
+        r"(?:[a-z0-9]"
+        r"(?:[a-z0-9-]{0,61}[a-z0-9])?\.)+"
+        r"[a-z]{2,63}$",
+        re.IGNORECASE,
+    )
+
+    return bool(pattern.match(value))
+
+
+def _normalize_ioc_type(ioc_type: str | None) -> str:
+    """Normaliza os nomes de tipos aceitos pela aplicação."""
+
+    if not isinstance(ioc_type, str):
+        return "auto"
+
+    normalized = ioc_type.strip().lower()
+
+    aliases = {
+        "automatico": "auto",
+        "automático": "auto",
+        "ip_address": "ip",
+        "ipv4": "ip",
+        "ipv6": "ip",
+        "dominio": "domain",
+        "domain_name": "domain",
+        "uri": "url",
+        "link": "url",
+        "arquivo": "hash",
+        "file": "hash",
+        "md5": "hash",
+        "sha1": "hash",
+        "sha-1": "hash",
+        "sha256": "hash",
+        "sha-256": "hash",
+    }
+
+    return aliases.get(normalized, normalized)
+
+
+def _parse_response_error(
+    response: requests.Response,
+) -> dict[str, Any] | None:
+    """
+    Converte códigos HTTP conhecidos em respostas padronizadas.
+    """
+
+    if response.ok:
+        return None
+
+    status_code = response.status_code
+
+    messages = {
+        400: "Requisição inválida enviada ao VirusTotal.",
+        401: "Chave da API do VirusTotal inválida ou não autorizada.",
+        403: "Acesso negado pela API do VirusTotal.",
+        404: "Indicador não encontrado no VirusTotal.",
+        429: "Limite de requisições do VirusTotal excedido.",
+        500: "Erro interno no servidor do VirusTotal.",
+        503: "Serviço do VirusTotal temporariamente indisponível.",
+    }
+
+    default_message = messages.get(
+        status_code,
+        f"Erro HTTP {status_code} retornado pelo VirusTotal.",
+    )
+
+    try:
+        payload = response.json()
+        api_message = (
+            payload.get("error", {}).get("message")
+            or payload.get("data", {}).get("message")
+        )
+
+        if api_message:
+            default_message = str(api_message)
+
+    except (ValueError, AttributeError, TypeError):
+        pass
+
+    return _error_result(
+        default_message,
+        status_code=status_code,
+    )
+
+
+def _error_result(
+    message: str,
+    status_code: int | None = None,
+) -> dict[str, Any]:
+    """Cria uma resposta de erro padronizada."""
+
+    result: dict[str, Any] = {
+        "success": False,
+        "error": message,
+    }
+
+    if status_code is not None:
+        result["status_code"] = status_code
+
+    return result
+
+
+__all__ = [
+    "query_virustotal",
+    "build_endpoint",
+    "detect_ioc_type",
+    "encode_url_id",
+    "is_valid_ip",
+    "is_valid_hash",
+    "is_valid_url",
+    "is_valid_domain",
+]
+
