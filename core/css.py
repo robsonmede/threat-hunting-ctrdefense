@@ -1,200 +1,310 @@
+# core/css.py
+
+from __future__ import annotations
+
 import streamlit as st
 
-def apply_cyberpunk_css():
-    """Aplica o tema cyberpunk/glassmorphism ao Streamlit."""
-    st.markdown("""
+
+def apply_cyberpunk_css() -> None:
+    """
+    Aplica o tema visual do Cyber Threat Research.
+    """
+
+    st.markdown(
+        """
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Inter:wght@300;400;600;700&display=swap');
 
-            :root {
-                --cyber-primary: #00f2fe;
-                --cyber-secondary: #4facfe;
-                --cyber-accent: #ff2a6d;
-                --cyber-bg-dark: #050811;
-                --cyber-bg-card: rgba(15, 23, 42, 0.75);
-                --cyber-border: rgba(51, 65, 85, 0.6);
-                --cyber-text: #cbd5e1;
-                --cyber-text-dim: #64748b;
-                --cyber-glow: rgba(0, 242, 254, 0.3);
-                --cyber-glow-strong: rgba(0, 242, 254, 0.6);
-            }
+        /* =========================================================
+           CONFIGURAÇÕES GERAIS
+        ========================================================= */
 
-            html, body, [class*="css"] {
-                font-family: 'Inter', sans-serif;
-                background-color: var(--cyber-bg-dark);
-                color: var(--cyber-text);
-            }
+        :root {
+            --bg-main: #070b14;
+            --bg-panel: #101827;
+            --bg-panel-hover: #172337;
+            --bg-sidebar: #20232d;
+            --border: #263852;
+            --border-hover: #08d9ff;
+            --text: #edf4ff;
+            --text-muted: #92a4bd;
+            --cyan: #00d9ff;
+            --cyan-dark: #008eac;
+            --green: #48e89a;
+            --orange: #ffad42;
+            --danger: #ff5f73;
+            --shadow: 0 8px 26px rgba(0, 0, 0, 0.28);
+        }
 
-            .stApp {
-                background: radial-gradient(circle at 50% -20%, #0f172a, #050811, #020408);
-            }
+        /* Remove o espaço superior exagerado do Streamlit */
+        .block-container {
+            max-width: 1450px !important;
+            padding-top: 2.5rem !important;
+            padding-bottom: 3rem !important;
+            padding-left: 3rem !important;
+            padding-right: 3rem !important;
+        }
 
-            .main-header {
-                font-family: 'JetBrains Mono', monospace;
-                font-size: 2.4rem;
-                font-weight: 800;
-                background: linear-gradient(90deg, #00f2fe, #4facfe);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                text-align: center;
-                margin: 1.5rem 0 0.5rem 0;
-                letter-spacing: -0.5px;
-                text-shadow: 0 0 25px rgba(0, 242, 254, 0.3);
-            }
+        .stApp {
+            background:
+                radial-gradient(
+                    circle at 50% 0%,
+                    rgba(0, 174, 255, 0.08),
+                    transparent 38%
+                ),
+                var(--bg-main);
+            color: var(--text);
+        }
 
-            .sub-header {
-                font-family: 'Inter', sans-serif;
-                font-size: 1.15rem;
-                color: #94a3b8;
-                text-align: center;
-                margin-bottom: 2rem;
-                max-width: 800px;
-                margin-left: auto;
-                margin-right: auto;
-                line-height: 1.5;
-            }
+        /* =========================================================
+           BARRA LATERAL
+        ========================================================= */
 
-            .stButton > button {
-                font-family: 'JetBrains Mono', monospace;
-                font-weight: 600;
-                background: linear-gradient(135deg, #0f172a, #1e293b);
-                border: 1px solid var(--cyber-border);
-                color: var(--cyber-primary);
-                padding: 0.5rem 1.5rem;
-                border-radius: 8px;
-                transition: all 0.25s ease;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            }
+        section[data-testid="stSidebar"] {
+            background: var(--bg-sidebar);
+            border-right: 1px solid #303746;
+        }
 
-            .stButton > button:hover {
-                border-color: var(--cyber-primary);
-                box-shadow: 0 0 15px var(--cyber-glow);
-                transform: translateY(-2px);
-            }
+        section[data-testid="stSidebar"] > div {
+            padding: 1rem 0.75rem;
+        }
 
-            .tool-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-                gap: 16px;
-                margin: 1.5rem 0;
+        section[data-testid="stSidebar"] .block-container {
+            padding: 0 !important;
+        }
+
+        section[data-testid="stSidebar"] hr {
+            border-color: #464b58;
+            margin: 1.25rem 0;
+        }
+
+        section[data-testid="stSidebar"] label,
+        section[data-testid="stSidebar"] p {
+            color: var(--text);
+        }
+
+        section[data-testid="stSidebar"] .stTextInput input,
+        section[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] {
+            background: #0e1420;
+            border: 1px solid #303b52;
+            border-radius: 8px;
+        }
+
+        /* =========================================================
+           TÍTULOS
+        ========================================================= */
+
+        h1,
+        h2,
+        h3 {
+            color: var(--text) !important;
+            letter-spacing: -0.02em;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 4vw, 3.2rem) !important;
+            font-weight: 800 !important;
+        }
+
+        h2 {
+            margin-top: 2rem !important;
+            margin-bottom: 1rem !important;
+            font-size: 1.65rem !important;
+        }
+
+        h3 {
+            font-size: 1.1rem !important;
+        }
+
+        /* =========================================================
+           CABEÇALHO
+        ========================================================= */
+
+        .ctr-header {
+            text-align: center;
+            padding: 0.5rem 0 2.5rem;
+        }
+
+        .ctr-header h1 {
+            color: var(--cyan) !important;
+            text-shadow: 0 0 18px rgba(0, 217, 255, 0.38);
+            margin-bottom: 0.35rem !important;
+        }
+
+        .ctr-header p {
+            color: #9bb3d2;
+            font-size: 1.05rem;
+            margin: 0;
+        }
+
+        /* =========================================================
+           STATUS DOS SERVIÇOS
+        ========================================================= */
+
+        .status-card {
+            background: linear-gradient(
+                145deg,
+                #111c2d,
+                #0c1421
+            );
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            min-height: 108px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: 0.2s ease;
+        }
+
+        .status-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .status-name {
+            color: #cbd9ec;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.7rem;
+        }
+
+        .status-indicator {
+            width: 18px;
+            height: 18px;
+            margin: 0 auto;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow:
+                0 0 0 5px rgba(72, 232, 154, 0.12),
+                0 0 18px rgba(72, 232, 154, 0.9);
+        }
+
+        .status-indicator.offline {
+            background: var(--danger);
+            box-shadow:
+                0 0 0 5px rgba(255, 95, 115, 0.12),
+                0 0 18px rgba(255, 95, 115, 0.8);
+        }
+
+        /* =========================================================
+           CARDS DE FERRAMENTAS
+        ========================================================= */
+
+        .tool-card {
+            display: block;
+            height: 100%;
+            min-height: 155px;
+            padding: 1.25rem;
+            background: linear-gradient(
+                145deg,
+                var(--bg-panel),
+                #0c1320
+            );
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition:
+                transform 0.2s ease,
+                border-color 0.2s ease,
+                background 0.2s ease;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-4px);
+            background: var(--bg-panel-hover);
+            border-color: var(--border-hover);
+        }
+
+        .tool-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.55rem;
+        }
+
+        .tool-title {
+            color: var(--cyan);
+            font-size: 1.1rem;
+            font-weight: 750;
+            margin-bottom: 0.55rem;
+        }
+
+        .tool-description {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Remove sublinhado e aparência de link dos cards */
+        .tool-card,
+        .tool-card:hover,
+        .tool-card:visited {
+            text-decoration: none !important;
+        }
+
+        /* =========================================================
+           INPUTS E BOTÕES
+        ========================================================= */
+
+        .stTextInput input,
+        .stTextArea textarea {
+            background: #111a2a !important;
+            color: var(--text) !important;
+            border: 1px solid #2d3c57 !important;
+            border-radius: 9px !important;
+        }
+
+        .stTextInput input:focus,
+        .stTextArea textarea:focus {
+            border-color: var(--cyan) !important;
+            box-shadow: 0 0 0 1px var(--cyan) !important;
+        }
+
+        .stButton > button {
+            border: 1px solid #285171;
+            border-radius: 8px;
+            background: linear-gradient(
+                135deg,
+                #10243b,
+                #12314a
+            );
+            color: #eaf8ff;
+            font-weight: 650;
+            transition: 0.2s ease;
+        }
+
+        .stButton > button:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
+        }
+
+        /* =========================================================
+           RODAPÉ
+        ========================================================= */
+
+        .ctr-footer {
+            margin-top: 3.5rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid #233148;
+            text-align: center;
+            color: #7188a7;
+            font-size: 0.82rem;
+        }
+
+        /* =========================================================
+           RESPONSIVIDADE
+        ========================================================= */
+
+        @media (max-width: 900px) {
+            .block-container {
+                padding-left: 1.25rem !important;
+                padding-right: 1.25rem !important;
             }
 
             .tool-card {
-                background: var(--cyber-bg-card);
-                border: 1px solid var(--cyber-border);
-                border-radius: 12px;
-                padding: 18px 16px;
-                text-decoration: none;
-                color: inherit;
-                transition: all 0.25s ease;
-                backdrop-filter: blur(10px);
+                min-height: auto;
             }
+        }
 
-            .tool-card:hover {
-                border-color: var(--cyber-primary);
-                box-shadow: 0 0 20px var(--cyber-glow);
-                transform: translateY(-3px);
-            }
-
-            .tool-title {
-                font-family: 'JetBrains Mono', monospace;
-                font-weight: 700;
-                font-size: 1.1rem;
-                color: var(--cyber-primary);
-                margin-bottom: 6px;
-            }
-
-            .tool-desc {
-                font-size: 0.9rem;
-                color: var(--cyber-text-dim);
-                line-height: 1.4;
-            }
-
-            .footer-text {
-                text-align: center;
-                font-size: 0.85rem;
-                color: #64748b;
-                margin-top: 3rem;
-                padding: 1rem;
-                border-top: 1px solid var(--cyber-border);
-            }
-
-            .data-card {
-                background: var(--cyber-bg-card);
-                border: 1px solid var(--cyber-border);
-                border-radius: 12px;
-                padding: 1.25rem;
-                margin-bottom: 1rem;
-                backdrop-filter: blur(10px);
-            }
-
-            .metric-card {
-                background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9));
-                border: 1px solid var(--cyber-border);
-                border-radius: 10px;
-                padding: 1rem;
-                text-align: center;
-            }
-
-            .status-badge {
-                display: inline-block;
-                padding: 4px 10px;
-                border-radius: 20px;
-                font-size: 0.8rem;
-                font-weight: 600;
-                font-family: 'JetBrains Mono', monospace;
-            }
-
-            .status-safe { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.4); }
-            .status-warn { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); }
-            .status-danger { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); }
-            .status-info { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.4); }
-
-            /* Scrollbar personalizada */
-            ::-webkit-scrollbar { width: 10px; }
-            ::-webkit-scrollbar-track { background: #0f172a; }
-            ::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
-            ::-webkit-scrollbar-thumb:hover { background: #475569; }
-
-            /* Inputs e textareas */
-            .stTextInput > div > div > input,
-            .stTextArea > div > div > textarea {
-                background: rgba(15, 23, 42, 0.7);
-                border: 1px solid var(--cyber-border);
-                color: var(--cyber-text);
-                border-radius: 8px;
-                padding: 0.75rem;
-                font-family: 'Inter', sans-serif;
-            }
-
-            .stTextInput > div > div > input:focus,
-            .stTextArea > div > div > textarea:focus {
-                border-color: var(--cyber-primary);
-                box-shadow: 0 0 0 2px var(--cyber-glow);
-            }
-
-            /* Tabelas */
-            .stDataFrame {
-                border: 1px solid var(--cyber-border);
-                border-radius: 10px;
-                overflow: hidden;
-            }
-
-            /* Expanders */
-            .streamlit-expanderHeader {
-                background: var(--cyber-bg-card);
-                border: 1px solid var(--cyber-border);
-                border-radius: 8px;
-                font-family: 'JetBrains Mono', monospace;
-                font-weight: 600;
-                color: var(--cyber-primary);
-            }
-
-            /* Alertas */
-            .stAlert {
-                border-radius: 10px;
-                border: 1px solid;
-                backdrop-filter: blur(10px);
-            }
         </style>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
