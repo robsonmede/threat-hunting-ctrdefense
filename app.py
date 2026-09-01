@@ -33,21 +33,10 @@ lang_dict = render_sidebar()
 # ---------------------------------------------------------------------
 
 st.markdown(
-    f"""
-    <div class="main-header">
-        {lang_dict.get("app_title", "Cyber Threat Research")}
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-st.markdown(
-    f"""
-    <div class="sub-header">
-        {lang_dict.get(
-            "app_subtitle",
-            "Análise de IOCs, reputação de IPs e inteligência de ameaças",
-        )}
+    """
+    <div class="ctr-header">
+        <h1>Cyber Threat Research</h1>
+        <p>Inteligência de Ameaças · Plataforma V3.9</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -58,53 +47,52 @@ st.markdown(
 # Status das APIs
 # ---------------------------------------------------------------------
 
-st.markdown("### 📊 Status do Sistema")
+def render_status_card(nome: str, online: bool = True) -> None:
+    status_class = "" if online else "offline"
 
-col1, col2, col3, col4, col5 = st.columns(5)
+    st.markdown(
+        f"""
+        <div class="status-card">
+            <div class="status-name">{nome}</div>
+            <div class="status-indicator {status_class}"></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    
+status_columns = st.columns(5)
 
-col1.metric(
-    "VirusTotal",
-    "🟢" if st.session_state.get("active_vt_key") else "🟡",
-)
+servicos = [
+    ("VirusTotal", True),
+    ("AbuseIPDB", True),
+    ("urlscan.io", True),
+    ("BotScout", True),
+    ("OSINT", True),
+]
 
-col2.metric(
-    "AbuseIPDB",
-    "🟢" if st.session_state.get("active_abuse_key") else "🟡",
-)
-
-col3.metric(
-    "urlscan.io",
-    "🟢" if st.session_state.get("active_urlscan_key") else "⚪",
-)
-
-col4.metric(
-    "BotScout",
-    "🟢" if st.session_state.get("active_botscout_key") else "⚪",
-)
-
-# OSINT não depende de chave de API.
-col5.metric("OSINT", "🟢")
-
+for coluna, (nome, online) in zip(status_columns, servicos):
+    with coluna:
+        render_status_card(nome, online)
 
 # ---------------------------------------------------------------------
 # Hub de ferramentas
 # ---------------------------------------------------------------------
 
-st.markdown(
-    f"""
-    ### 🚀 {lang_dict.get(
-        "quick_hub",
-        "Hub Rápido de Threat Intelligence",
-    )}
-    """
-)
-
-st.markdown("Selecione uma ferramenta para análise detalhada:")
-
-st.markdown(
-    '<div class="tool-grid">',
-    unsafe_allow_html=True,
-)
+def render_tool_card(
+    icone: str,
+    titulo: str,
+    descricao: str,
+) -> None:
+    st.markdown(
+        f"""
+        <div class="tool-card">
+            <div class="tool-icon">{icone}</div>
+            <div class="tool-title">{titulo}</div>
+            <div class="tool-description">{descricao}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 # Primeira linha
@@ -204,37 +192,15 @@ st.markdown(
 
 
 # ---------------------------------------------------------------------
-# Consulta rápida
-# ---------------------------------------------------------------------
-
-st.markdown("### ⚡ Consulta Rápida OSINT")
-
-quick_query = st.text_input(
-    "Digite IP, domínio, hash ou URL para análise rápida:",
-    key="quick_query",
-)
-
-if quick_query.strip():
-    with st.spinner("Consultando múltiplas fontes..."):
-        st.info(f"Consulta rápida para: {quick_query.strip()}")
-        st.write(
-            "Funcionalidade em desenvolvimento. "
-            "Use as páginas específicas para uma análise completa."
-        )
-
-
-# ---------------------------------------------------------------------
 # Rodapé
 # ---------------------------------------------------------------------
 
 st.markdown(
-    f"""
-    <div class="footer-text">
-        {lang_dict.get(
-            "footer",
-            "© 2024 CTR Defense - Uso sob responsabilidade.",
-        )}
+    """
+    <div class="ctr-footer">
+        © 2024 CTR Defense · Uso autorizado e responsável
     </div>
     """,
     unsafe_allow_html=True,
 )
+
