@@ -8,12 +8,18 @@ from services.abuseipdb import check_abuseipdb
 from utils.export import save_history
 from utils.helpers import is_valid_ip
 
+from ui_sidebar import aplicar_sidebar
+
+
 
 st.set_page_config(
     page_title="AbuseIPDB",
     page_icon="🛡️",
     layout="wide",
 )
+
+aplicar_sidebar()
+
 
 apply_cyberpunk_css()
 check_password()

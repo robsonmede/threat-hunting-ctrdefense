@@ -5,12 +5,18 @@ from core.auth import check_password
 from core.css import apply_cyberpunk_css
 from utils.export import export_download_button
 
+from ui_sidebar import aplicar_sidebar
+
+
 
 st.set_page_config(
     page_title="Relatórios",
     page_icon="📊",
     layout="wide",
 )
+
+aplicar_sidebar()
+
 
 apply_cyberpunk_css()
 check_password()

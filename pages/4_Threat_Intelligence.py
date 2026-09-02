@@ -7,12 +7,18 @@ from core.css import apply_cyberpunk_css
 from utils.export import save_history
 from utils.helpers import detect_ioc_type
 
+from ui_sidebar import aplicar_sidebar
+
+
 
 st.set_page_config(
     page_title="Threat Intelligence",
     page_icon="🧠",
     layout="wide",
 )
+
+aplicar_sidebar()
+
 
 apply_cyberpunk_css()
 check_password()

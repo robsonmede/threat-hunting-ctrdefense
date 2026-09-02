@@ -15,12 +15,18 @@ from services.virustotal import (
 )
 from utils.export import save_history
 
+from ui_sidebar import aplicar_sidebar
+
+
 
 st.set_page_config(
     page_title="VirusTotal",
     page_icon="🧪",
     layout="wide",
 )
+
+aplicar_sidebar()
+
 
 apply_cyberpunk_css()
 check_password()

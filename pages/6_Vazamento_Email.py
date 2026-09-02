@@ -13,6 +13,9 @@ from services.xposedornot import query_xposedornot
 from utils.export import save_history
 from utils.helpers import is_valid_email
 
+from ui_sidebar import aplicar_sidebar
+
+
 
 st.set_page_config(
     page_title="Vazamento de E-mail",
@@ -20,6 +23,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+aplicar_sidebar()
+
 
 apply_cyberpunk_css()
 check_password()

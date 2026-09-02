@@ -8,13 +8,80 @@ from core.auth import logout, require_login
 from core.css import load_css
 from core.sidebar import render_sidebar
 
+from ui_sidebar import aplicar_sidebar
+
+
 
 st.set_page_config(
-    page_title="Cyber Threat Research",
+    page_title="Cyber Threat Research 3.9",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+aplicar_sidebar()
+
+
+
+# >>> NAVEGACAO_HOME_FRONTEND >>>
+def _renderizar_link_home_sidebar():
+    """
+    Mantém o arquivo app.py e altera somente sua apresentação
+    na navegação lateral do Streamlit.
+    """
+
+    st.markdown(
+        """
+        <style>
+        /*
+         * Oculta somente o primeiro item da navegação automática,
+         * que corresponde ao arquivo principal app.py.
+         */
+        [data-testid="stSidebarNav"] ul li:first-child {
+            display: none !important;
+        }
+
+        /*
+         * Estilização do link Home criado abaixo.
+         */
+        [data-testid="stSidebar"] [data-testid="stPageLink"] a {
+            border: 1px solid rgba(0, 229, 255, 0.25);
+            border-radius: 8px;
+            padding: 0.55rem 0.75rem;
+            margin-bottom: 0.35rem;
+            transition:
+                background-color 0.2s ease,
+                border-color 0.2s ease;
+        }
+
+        [data-testid="stSidebar"] [data-testid="stPageLink"] a:hover {
+            background: rgba(0, 229, 255, 0.08);
+            border-color: rgba(0, 229, 255, 0.65);
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # O destino continua sendo app.py; apenas o texto visível é Home.
+    try:
+        st.sidebar.page_link(
+            "app.py",
+            label="Home",
+            icon=":material/home:",
+        )
+    except TypeError:
+        # Compatibilidade com versões que não aceitam ícones Material.
+        st.sidebar.page_link(
+            "app.py",
+            label="Home",
+            icon="🏠",
+        )
+
+
+_renderizar_link_home_sidebar()
+# <<< NAVEGACAO_HOME_FRONTEND <<<
+
 
 load_css()
 
@@ -46,7 +113,7 @@ st.markdown(
     """
     <section class="hero-home">
         <div class="hero-badge">⚡ CTR DEFENSE PLATFORM</div>
-        <h1>Cyber Threat Research</h1>
+        <h1>Cyber Threat Research <span style="white-space: nowrap;">3.9</span></h1>
         <p>
             Investigue indicadores de comprometimento, reputação,
             vazamentos e inteligência de ameaças em um único ambiente.
@@ -73,53 +140,20 @@ with col4:
     st.metric("Status da plataforma", "Online")
 
 
-tools = [
-    (
-        "🔎",
-        "Extrator de IOCs",
-        "Extraia IPs, domínios, hashes e URLs de textos e arquivos.",
-        "1_Extrator_IOCs.py",
-    ),
-    (
-        "🛡️",
-        "AbuseIPDB",
-        "Consulte reputação, score de abuso e relatórios de IPs.",
-        "2_AbuseIPDB.py",
-    ),
-    (
-        "🧪",
-        "VirusTotal",
-        "Analise IPs, domínios, URLs e hashes.",
-        "3_VirusTotal.py",
-    ),
-    (
-        "🧠",
-        "Threat Intelligence",
-        "Organize e correlacione informações de investigação.",
-        "4_Threat_Intelligence.py",
-    ),
-    (
-        "📊",
-        "Relatórios",
-        "Consulte o histórico das análises realizadas.",
-        "5_Relatorios.py",
-    ),
-    (
-        "📧",
-        "Vazamento de E-mail",
-        "Verifique a presença de e-mails em vazamentos públicos.",
-        "6_Vazamento_Email.py",
-    ),
-]
+# >>> PAINEL_FERRAMENTAS_OCULTO >>>
+pass
+# <<< PAINEL_FERRAMENTAS_OCULTO <<<
 
 pages_path = Path(__file__).parent / "pages"
 
+# Correção: painel antigo de ferramentas removido
+tools = []
 existing_tools = [
     tool for tool in tools
     if (pages_path / tool[3]).exists()
 ]
 
-st.markdown("### Ferramentas disponíveis")
+st.markdown("### Responsabilidades do usuário")
 
 for start in range(0, len(existing_tools), 3):
     row = existing_tools[start:start + 3]

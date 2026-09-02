@@ -9,12 +9,18 @@ from core.css import apply_cyberpunk_css
 from utils.export import export_download_button, save_history
 from utils.helpers import detect_ioc_type, normalize_ioc
 
+from ui_sidebar import aplicar_sidebar
+
+
 
 st.set_page_config(
     page_title="Extrator de IOCs",
     page_icon="🔎",
     layout="wide",
 )
+
+aplicar_sidebar()
+
 
 apply_cyberpunk_css()
 check_password()
