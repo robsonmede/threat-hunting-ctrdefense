@@ -1,206 +1,158 @@
+from __future__ import annotations
+
+from pathlib import Path
+
 import streamlit as st
 
-from core.auth import check_password
-from core.css import apply_cyberpunk_css
+from core.auth import logout, require_login
+from core.css import load_css
 from core.sidebar import render_sidebar
 
 
-# ---------------------------------------------------------------------
-# Configuração da página
-# ---------------------------------------------------------------------
-
 st.set_page_config(
-    page_title="Cyber Threat Research V3.9",
-    page_icon="🛡️",
+    page_title="Cyber Threat Research",
+    page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
+load_css()
 
-# ---------------------------------------------------------------------
-# Inicialização
-# ---------------------------------------------------------------------
+if not require_login():
+    st.stop()
 
-apply_cyberpunk_css()
-check_password()
+render_sidebar()
 
-# Deve ser executado antes de qualquer acesso às chaves da sessão.
-lang_dict = render_sidebar()
+with st.sidebar:
+    st.markdown("---")
 
+    st.markdown(
+        f"""
+        <div class="logged-user">
+            <small>Usuário conectado</small>
+            <strong>
+                👤 {st.session_state.get("username", "usuário")}
+            </strong>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-# ---------------------------------------------------------------------
-# Cabeçalho principal
-# ---------------------------------------------------------------------
+    if st.button("Sair da conta", use_container_width=True):
+        logout()
+
 
 st.markdown(
     """
-    <div class="ctr-header">
+    <section class="hero-home">
+        <div class="hero-badge">⚡ CTR DEFENSE PLATFORM</div>
         <h1>Cyber Threat Research</h1>
-        <p>Inteligência de Ameaças · Plataforma V3.9</p>
-    </div>
+        <p>
+            Investigue indicadores de comprometimento, reputação,
+            vazamentos e inteligência de ameaças em um único ambiente.
+        </p>
+    </section>
     """,
     unsafe_allow_html=True,
 )
 
+st.markdown("### Visão geral")
 
-# ---------------------------------------------------------------------
-# Status das APIs
-# ---------------------------------------------------------------------
-
-def render_status_card(nome: str, online: bool = True) -> None:
-    status_class = "" if online else "offline"
-
-    st.markdown(
-        f"""
-        <div class="status-card">
-            <div class="status-name">{nome}</div>
-            <div class="status-indicator {status_class}"></div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    
-status_columns = st.columns(5)
-
-servicos = [
-    ("VirusTotal", True),
-    ("AbuseIPDB", True),
-    ("urlscan.io", True),
-    ("BotScout", True),
-    ("OSINT", True),
-]
-
-for coluna, (nome, online) in zip(status_columns, servicos):
-    with coluna:
-        render_status_card(nome, online)
-
-# ---------------------------------------------------------------------
-# Hub de ferramentas
-# ---------------------------------------------------------------------
-
-def render_tool_card(
-    icone: str,
-    titulo: str,
-    descricao: str,
-) -> None:
-    st.markdown(
-        f"""
-        <div class="tool-card">
-            <div class="tool-icon">{icone}</div>
-            <div class="tool-title">{titulo}</div>
-            <div class="tool-description">{descricao}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-# Primeira linha
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    st.markdown(
-        """
-        <a href="/pages/1_Extrator_IOCs" class="tool-card">
-            <div class="tool-title">🔍 Extrator de IOCs</div>
-            <div class="tool-desc">
-                Extrai indicadores de compromisso de textos, logs,
-                arquivos e URLs.
-            </div>
-        </a>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.metric("Módulos ativos", "4")
 
 with col2:
-    st.markdown(
-        """
-        <a href="/pages/2_AbuseIPDB" class="tool-card">
-            <div class="tool-title">🛡️ AbuseIPDB</div>
-            <div class="tool-desc">
-                Consulta reputação de IPs, categorias de abuso e
-                histórico de reports.
-            </div>
-        </a>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.metric("Consultas realizadas", "—")
 
 with col3:
-    st.markdown(
-        """
-        <a href="/pages/3_VirusTotal" class="tool-card">
-            <div class="tool-title">🧪 VirusTotal</div>
-            <div class="tool-desc">
-                Analisa arquivos, URLs, IPs e domínios com múltiplos
-                motores antivírus.
-            </div>
-        </a>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-# Segunda linha
-col4, col5, col6 = st.columns(3)
+    st.metric("Indicadores analisados", "—")
 
 with col4:
-    st.markdown(
-        """
-        <a href="/pages/4_Threat_Intelligence" class="tool-card">
-            <div class="tool-title">🧠 Threat Intel</div>
-            <div class="tool-desc">
-                Correlação de dados, análise de CVEs e inteligência
-                contextual.
-            </div>
-        </a>
-        """,
-        unsafe_allow_html=True,
-    )
-
-with col5:
-    st.markdown(
-        """
-        <a href="/pages/5_Relatorios" class="tool-card">
-            <div class="tool-title">📊 Relatórios</div>
-            <div class="tool-desc">
-                Gera relatórios com histórico de consultas e métricas.
-            </div>
-        </a>
-        """,
-        unsafe_allow_html=True,
-    )
-
-with col6:
-    st.markdown(
-        """
-        <a href="/pages/6_Vazamento_Email" class="tool-card">
-            <div class="tool-title">🔓 Vazamento de E-mail</div>
-            <div class="tool-desc">
-                Verifica se e-mails aparecem em vazamentos públicos
-                de dados.
-            </div>
-        </a>
-        """,
-        unsafe_allow_html=True,
-    )
-
-st.markdown(
-    "</div>",
-    unsafe_allow_html=True,
-)
+    st.metric("Status da plataforma", "Online")
 
 
-# ---------------------------------------------------------------------
-# Rodapé
-# ---------------------------------------------------------------------
+tools = [
+    (
+        "🔎",
+        "Extrator de IOCs",
+        "Extraia IPs, domínios, hashes e URLs de textos e arquivos.",
+        "1_Extrator_IOCs.py",
+    ),
+    (
+        "🛡️",
+        "AbuseIPDB",
+        "Consulte reputação, score de abuso e relatórios de IPs.",
+        "2_AbuseIPDB.py",
+    ),
+    (
+        "🧪",
+        "VirusTotal",
+        "Analise IPs, domínios, URLs e hashes.",
+        "3_VirusTotal.py",
+    ),
+    (
+        "🧠",
+        "Threat Intelligence",
+        "Organize e correlacione informações de investigação.",
+        "4_Threat_Intelligence.py",
+    ),
+    (
+        "📊",
+        "Relatórios",
+        "Consulte o histórico das análises realizadas.",
+        "5_Relatorios.py",
+    ),
+    (
+        "📧",
+        "Vazamento de E-mail",
+        "Verifique a presença de e-mails em vazamentos públicos.",
+        "6_Vazamento_Email.py",
+    ),
+]
+
+pages_path = Path(__file__).parent / "pages"
+
+existing_tools = [
+    tool for tool in tools
+    if (pages_path / tool[3]).exists()
+]
+
+st.markdown("### Ferramentas disponíveis")
+
+for start in range(0, len(existing_tools), 3):
+    row = existing_tools[start:start + 3]
+    columns = st.columns(3)
+
+    for column, tool in zip(columns, row):
+        icon, title, description, _filename = tool
+
+        with column:
+            st.markdown(
+                f"""
+                <div class="home-tool-card">
+                    <div class="home-tool-icon">{icon}</div>
+                    <h3>{title}</h3>
+                    <p>{description}</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
 st.markdown(
     """
-    <div class="ctr-footer">
-        © 2024 CTR Defense · Uso autorizado e responsável
+    <div class="home-notice">
+        <strong>🔐 Segurança</strong>
+        <span>
+            As credenciais devem ficar em secrets.toml e nunca no
+            código-fonte.
+        </span>
     </div>
+
+    <footer class="home-footer">
+        © 2024–2026 Cyber Threat Research · Uso autorizado e responsável
+    </footer>
     """,
     unsafe_allow_html=True,
 )
-

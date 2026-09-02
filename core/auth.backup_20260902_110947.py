@@ -124,19 +124,3 @@ def logout() -> None:
         st.session_state.pop(key, None)
 
     st.rerun()
-
-# ---------------------------------------------------------------------
-# Compatibilidade com páginas antigas
-# ---------------------------------------------------------------------
-
-def check_password() -> bool:
-    """
-    Compatibilidade com páginas que ainda utilizam:
-
-        from core.auth import check_password
-
-    Retorna True quando o usuário está autenticado.
-    Caso contrário, exibe o formulário de login e retorna False.
-    """
-    return require_login()
-
