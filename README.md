@@ -77,9 +77,9 @@ threat-intel-streamlit/
 #INSTALL APP SERVER
 
 python3 -m venv .venv
-
 source .venv/bin/activate
 
+pip install pandas
 pip install -r requirements.txt
 
 python -c "import hashlib; print(hashlib.sha256(b'SUA_SENHA').hexdigest())"
