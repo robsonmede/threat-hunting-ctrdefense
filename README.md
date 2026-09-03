@@ -1,14 +1,9 @@
-
 # 🛡️Threat Research v3.9
-
 Plataforma modular de **Threat Intelligence** desenvolvida em Python e Streamlit para extração, classificação e análise de Indicadores de Comprometimento — IOCs.
-
+<img src="https://ctrdefense.io/wp-content/uploads/2026/09/threat-research-removebg-preview.png" alt="Threat Research">
 O projeto foi criado para apoiar atividades autorizadas de investigação, resposta a incidentes, análise OSINT e pesquisa defensiva em segurança da informação.
 
 > **Utilize esta ferramenta somente em ambientes próprios, autorizados, educacionais ou defensivos.**
-
-<img src="https://ctrdefense.io/wp-content/uploads/2026/09/threat-research-removebg-preview.png" alt="Threat Research">
-
 ## 📌 Funcionalidades
 
 - Extração automática de IOCs a partir de textos, logs e relatórios;
