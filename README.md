@@ -7,7 +7,7 @@ O projeto foi criado para apoiar atividades autorizadas de investigação, respo
 
 > **Utilize esta ferramenta somente em ambientes próprios, autorizados, educacionais ou defensivos.**
 
-<img src="[https://ctrdefense.io/wp-content/uploads/2026/09/0-3.png]" alt="Threat Research">
+<img src="https://ctrdefense.io/wp-content/uploads/2026/09/0-3.png" alt="Threat Research">
 
 ## 📌 Funcionalidades
 
